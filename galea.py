@@ -54,7 +54,6 @@ def main(args):
     pipeline.set_state(gst.STATE_PLAYING)
     loop.run()
     pipeline.set_state(gst.STATE_NULL)
-    print "done"
 
 def composition(files):
     assert len(files) > 0
@@ -75,7 +74,6 @@ def composition(files):
         gsrc.props.media_duration = length
         gsrc.props.priority       = len(files) - idx + 1
         composition.add(gsrc)
-        print "added file %s with priority %d, start %r, duration %r, end %r" % (gsrc.props.location, gsrc.props.priority, gsrc.props.start/gst.SECOND, gsrc.props.duration/gst.SECOND, (gsrc.props.start + gsrc.props.duration)/gst.SECOND)
         current_start = current_start + length - TRANSITION_LENGTH
 
     global controllers
@@ -94,7 +92,6 @@ def composition(files):
         op.props.media_duration = TRANSITION_LENGTH
         op.props.priority       = 1
         composition.add(op)
-        print "added op with priority %d start %r" % (op.props.priority, op.props.start/gst.SECOND)
         current_start = current_start + length - TRANSITION_LENGTH
 
     return controllers, composition

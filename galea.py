@@ -7,6 +7,7 @@ import gobject
 import pygst
 pygst.require("0.10")
 import gst
+from optparse import OptionParser
 
 controllers = []
 
@@ -24,12 +25,23 @@ def duration(filepath):
     return duration
 
 def main(args):
-    controllers, comp = composition(args)
+    # get arguments
+    parser = OptionParser()
+    parser.add_option("-o", dest="output_filename", default="transitions.webm")
+    parser.add_option("-l", dest="transition_length", default=0.5)
+    parser.add_option("-t", dest="transition_type", default=21)
+
+    options, args = parser.parse_args()
+    files = args
+
+    transition_length = long(float(options.transition_length) * gst.SECOND)
+
+    controllers, comp = composition(int(options.transition_type), transition_length, files)
     color= gst.element_factory_make("ffmpegcolorspace")
     enc = gst.element_factory_make("theoraenc")
     mux = gst.element_factory_make("oggmux")
     sink = gst.element_factory_make("filesink")
-    sink.props.location = "./transitions.ogv"
+    sink.props.location = options.output_filename
     pipeline = gst.Pipeline()
     pipeline.add(comp, color, enc, mux, sink)
     color.link(enc)
@@ -55,13 +67,12 @@ def main(args):
     loop.run()
     pipeline.set_state(gst.STATE_NULL)
 
-def composition(files):
+def composition(transition_type, transition_length, files):
     assert len(files) > 0
     files = [('file://'+os.path.abspath(x), duration(x)) for x in files]
 
-    TRANSITION_LENGTH = long(2 * gst.SECOND)
-    TRANSITION_TYPE = 21
-    assert all(x[1] > TRANSITION_LENGTH for x in files)
+    TRANSITION_LENGTH = long(0.1 * gst.SECOND)
+    assert all(x[1] > transition_length for x in files)
 
     composition  = gst.element_factory_make("gnlcomposition")
     current_start = 0
@@ -74,25 +85,25 @@ def composition(files):
         gsrc.props.media_duration = length
         gsrc.props.priority       = len(files) - idx + 1
         composition.add(gsrc)
-        current_start = current_start + length - TRANSITION_LENGTH
+        current_start = current_start + length - transition_length
 
     global controllers
 
     assert len(files) > 0, files
-    current_start = files[0][1] - TRANSITION_LENGTH
+    current_start = files[0][1] - transition_length
     for fileuri, length in files[1:]:
-        trans, controller = transition(TRANSITION_TYPE, TRANSITION_LENGTH)
+        trans, controller = transition(transition_type, transition_length)
         controllers.append(controller)
 
         op = gst.element_factory_make("gnloperation")
         op.add(trans)
         op.props.start          = current_start
-        op.props.duration       = TRANSITION_LENGTH
+        op.props.duration       = transition_length
         op.props.media_start    = 0
-        op.props.media_duration = TRANSITION_LENGTH
+        op.props.media_duration = transition_length
         op.props.priority       = 1
         composition.add(op)
-        current_start = current_start + length - TRANSITION_LENGTH
+        current_start = current_start + length - transition_length
 
     return controllers, composition
 

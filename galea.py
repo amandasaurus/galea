@@ -9,8 +9,6 @@ pygst.require("0.10")
 import gst
 from optparse import OptionParser
 
-controllers = []
-
 def duration(filepath):
     """Given a filepath, return the length (in nanoseconds) of the media"""
     gobject.threads_init()
@@ -87,7 +85,7 @@ def composition(transition_type, transition_length, files):
         composition.add(gsrc)
         current_start = current_start + length - transition_length
 
-    global controllers
+    controllers = []
 
     assert len(files) > 0, files
     current_start = files[0][1] - transition_length

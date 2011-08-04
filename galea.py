@@ -34,7 +34,7 @@ def main(args):
 
     transition_length = long(float(options.transition_length) * gst.SECOND)
 
-    controllers, comp = composition(int(options.transition_type), transition_length, files)
+    comp, controllers = composition(int(options.transition_type), transition_length, files)
     color= gst.element_factory_make("ffmpegcolorspace")
     enc = gst.element_factory_make("theoraenc")
     mux = gst.element_factory_make("oggmux")
@@ -103,7 +103,7 @@ def composition(transition_type, transition_length, files):
         composition.add(op)
         current_start = current_start + length - transition_length
 
-    return controllers, composition
+    return composition, controllers
 
 
 

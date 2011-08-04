@@ -122,6 +122,8 @@ def transition(transition_type, length):
     queue.link(smpte)
     smpte.link(mixer)
 
+    # we need to keep the controller (and all controllers made) around till the
+    # end otherwise they get cleared up and deleted and things break
     controller = gst.Controller(smpte, "position")
     controller.set_interpolation_mode("position", gst.INTERPOLATE_LINEAR)
     controller.set("position", 0, 1.0)

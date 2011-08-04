@@ -11,6 +11,7 @@ from optparse import OptionParser
 
 def duration(filepath):
     """Given a filepath, return the length (in nanoseconds) of the media"""
+    assert os.path.isfile(filepath)
     gobject.threads_init()
     d = gst.parse_launch("filesrc name=source ! decodebin2 ! fakesink")
     source = d.get_by_name("source")

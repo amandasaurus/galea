@@ -115,6 +115,7 @@ def transition(transition_type, length):
     queue = gst.element_factory_make("queue")
     smpte  = gst.element_factory_make("smptealpha")
     smpte.props.type = transition_type
+    smpte.props.border = 20000
     mixer  = gst.element_factory_make("videomixer")
 
     bin.add(alpha1, queue, smpte, mixer)

@@ -36,7 +36,7 @@ def main(args):
 
     transition_length = long(float(options.transition_length) * gst.SECOND)
 
-    comp, controllers = composition(int(options.transition_type), transition_length, files)
+    vcomp, controllers = composition(int(options.transition_type), transition_length, files)
 
     if options.music:
         assert os.path.isfile(options.music)
@@ -54,15 +54,15 @@ def main(args):
 
     vqueue = gst.element_factory_make("queue")
     color= gst.element_factory_make("ffmpegcolorspace")
-    enc = gst.element_factory_make("theoraenc")
+    venc = gst.element_factory_make("theoraenc")
     mux = gst.element_factory_make("oggmux")
     sink = gst.element_factory_make("filesink")
     sink.props.location = options.output_filename
     pipeline = gst.Pipeline()
-    pipeline.add(comp, vqueue, color, enc, mux, sink)
+    pipeline.add(vcomp, vqueue, color, venc, mux, sink)
     vqueue.link(color)
-    color.link(enc)
-    enc.link(mux)
+    color.link(venc)
+    venc.link(mux)
     mux.link(sink)
 
     if options.music:
@@ -81,7 +81,7 @@ def main(args):
     def on_pad(comp, pad, elements):
         convpad = elements.get_compatible_pad(pad, pad.get_caps())
         pad.link(convpad)
-    comp.connect("pad-added", on_pad, vqueue)
+    vcomp.connect("pad-added", on_pad, vqueue)
     if options.music:
         acomp.connect("pad-added", on_pad, queue)
 

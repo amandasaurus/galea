@@ -175,16 +175,28 @@ def composition(transition_type, transition_length, files):
 
 
 def transition(transition_type, length):
+    """
+    Given a smpte transition type number & length in nanoseconds, returns a gstreamer bin that does that transition
+    """
+    # Rather than use the smpte transition itself, this uses the smptealpha
+    # approach. cf. http://notes.brooks.nu/gstreamer-video-crossfade-example/
     bin = gst.Bin()
     alpha1 = gst.element_factory_make("alpha")
     queue = gst.element_factory_make("queue")
     smpte  = gst.element_factory_make("smptealpha")
+
     smpte.props.type = abs(transition_type)
+
+    # A fuzzy transition, rather than a sharp edge
     smpte.props.border = 20000
+
+    # Invert the transition if it's a negative number
     smpte.props.invert = transition_type < 0
+
     mixer  = gst.element_factory_make("videomixer")
 
     bin.add(alpha1, queue, smpte, mixer)
+
     alpha1.link(mixer)
     queue.link(smpte)
     smpte.link(mixer)

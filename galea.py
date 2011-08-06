@@ -55,6 +55,7 @@ def main(args):
     video_files = args
 
     assert options.format in formats, "Unknown format %r, known formats: %r" % (options.format, formats.keys())
+    format = formats[options.format]
 
     transition_length = long(float(options.transition_length) * gst.SECOND)
 
@@ -65,8 +66,8 @@ def main(args):
 
     vqueue = gst.element_factory_make("queue")
     color= gst.element_factory_make("ffmpegcolorspace")
-    venc = gst.element_factory_make("theoraenc")
-    mux = gst.element_factory_make("oggmux")
+    venc = gst.element_factory_make(format['venc'])
+    mux = gst.element_factory_make(format['muxer'])
     progress = gst.element_factory_make("progressreport")
     sink = gst.element_factory_make("filesink")
     sink.props.location = options.output_filename
@@ -80,7 +81,7 @@ def main(args):
 
     if options.music:
         audioconvert = gst.element_factory_make("audioconvert")
-        aenc = gst.element_factory_make("vorbisenc")
+        aenc = gst.element_factory_make(format['aenc'])
         queue = gst.element_factory_make("queue")
         muxqueue = gst.element_factory_make("queue")
         pipeline.add(audioconvert, aenc, queue)

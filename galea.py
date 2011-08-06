@@ -24,14 +24,21 @@ def duration(filepath):
     return duration
 
 def music_stream(music_filename, all_video_files, transition_length):
+    offset = 0
+    if ',' in music_filename and not os.path.isfile(music_filename):
+        music_filename, offset = music_filename.split(",", 1)
+        offset = float(offset)
+        assert offset >= 0
+        offset = long(offset * gst.SECOND)
+        
     assert os.path.isfile(music_filename)
     file_lengths = sum(duration(x) for x in all_video_files) - transition_length * (len(all_video_files) - 1)
     music_src = gst.element_factory_make("gnlfilesource")
     music_src.props.location = "file://"+os.path.abspath(music_filename)
     music_src.props.start          = 0
     music_src.props.duration       = file_lengths
-    music_src.props.media_start    = 0
-    music_src.props.media_duration = file_lengths
+    music_src.props.media_start    = offset
+    music_src.props.media_duration = file_lengths + offset
     music_src.props.priority       = 1
     acomp = gst.element_factory_make("gnlcomposition")
     acomp.add(music_src)

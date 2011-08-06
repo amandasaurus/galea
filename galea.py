@@ -53,9 +53,9 @@ def main(args):
     parser.add_option("-v", "--music-volume", dest="music_volume", default=1.0)
 
     formats = {
-        'ogv':  { 'venc': 'theoraenc', 'aenc': 'vorbisenc', 'muxer': 'oggmux'},
-        'webm': { 'venc': 'vp8enc', 'aenc': 'vorbisenc', 'muxer': 'webmmux' },
-        'mp4':  { 'venc': 'x264enc', 'aenc': 'lame', 'muxer': 'mp4mux' },
+        'ogv':  { 'venc': 'theoraenc', 'aenc': 'vorbisenc', 'muxer': 'oggmux', 'filename':"%s.ogv"},
+        'webm': { 'venc': 'vp8enc', 'aenc': 'vorbisenc', 'muxer': 'webmmux', 'filename':"%s.webm" },
+        'mp4':  { 'venc': 'x264enc', 'aenc': 'lame', 'muxer': 'mp4mux', 'filename':"%s.mp4" },
     }
 
     options, args = parser.parse_args()
@@ -77,7 +77,7 @@ def main(args):
     mux = gst.element_factory_make(format['muxer'])
     progress = gst.element_factory_make("progressreport")
     sink = gst.element_factory_make("filesink")
-    sink.props.location = options.output_filename + "." + options.format
+    sink.props.location = format['filename'] % options.output_filename
     pipeline = gst.Pipeline()
     pipeline.add(vcomp, vqueue, color, venc, mux, progress, sink)
     vqueue.link(color)

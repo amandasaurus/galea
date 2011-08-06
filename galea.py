@@ -47,8 +47,14 @@ def main(args):
     parser.add_option("-m", '--music', dest="music", default=None)
     parser.add_option("-f", "--format", dest="format", default="ogv", help="Type of video format output")
 
+    formats = {
+        'ogv':  { 'venc': 'theoraenc', 'aenc': 'vorbisenc', 'muxer': 'oggmux'},
+    }
+
     options, args = parser.parse_args()
     video_files = args
+
+    assert options.format in formats, "Unknown format %r, known formats: %r" % (options.format, formats.keys())
 
     transition_length = long(float(options.transition_length) * gst.SECOND)
 

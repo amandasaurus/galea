@@ -28,7 +28,7 @@ def main(args):
     parser = OptionParser()
     parser.add_option("-o", dest="output_filename", default="transitions.webm")
     parser.add_option("-l", dest="transition_length", default=0.5)
-    parser.add_option("-t", dest="transition_type", default=21)
+    parser.add_option("-t", dest="transition_type", default=-21)
 
     options, args = parser.parse_args()
     files = args

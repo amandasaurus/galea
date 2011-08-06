@@ -72,6 +72,7 @@ def main(args):
         muxqueue = gst.element_factory_make("queue")
         pipeline.add(audioconvert, aenc, queue)
         pipeline.add(muxqueue)
+        pipeline.add(acomp)
         queue.link(audioconvert)
         audioconvert.link(aenc)
         aenc.link(muxqueue)

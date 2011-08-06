@@ -28,7 +28,7 @@ def main(args):
     parser = OptionParser()
     parser.add_option("-o", '--output', dest="output_filename", default="transitions.ogv")
     parser.add_option("-l", '--transition-length', dest="transition_length", default=0.5)
-    parser.add_option("-t", '--transition-type' dest="transition_type", default=-21)
+    parser.add_option("-t", '--transition-type', dest="transition_type", default=-21)
     parser.add_option("-m", '--music', dest="music", default=None)
 
     options, args = parser.parse_args()

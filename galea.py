@@ -125,7 +125,7 @@ def composition(transition_type, transition_length, files):
     current_start = 0
     for idx, (fileuri, length) in enumerate(files):
         gsrc = gst.element_factory_make("gnlfilesource")
-        gsrc.props.location = fileuri
+        gsrc.props.location       = fileuri
         gsrc.props.start          = current_start
         gsrc.props.duration       = length
         gsrc.props.media_start    = 0
@@ -139,6 +139,7 @@ def composition(transition_type, transition_length, files):
         # something that you have to poke with and do black magic to make it
         # work
         gsrc.props.priority       = len(files) - idx + 1
+
         composition.add(gsrc)
         current_start = current_start + length - transition_length
 

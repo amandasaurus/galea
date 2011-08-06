@@ -23,6 +23,21 @@ def duration(filepath):
     d.set_state(gst.STATE_NULL)
     return duration
 
+def music_stream(music_filename, all_video_files, transition_length):
+    assert os.path.isfile(music_filename)
+    file_lengths = sum(duration(x) for x in all_video_files) - transition_length * (len(all_video_files) - 1)
+    music_src = gst.element_factory_make("gnlfilesource")
+    music_src.props.location = "file://"+os.path.abspath(music_filename)
+    music_src.props.start          = 0
+    music_src.props.duration       = file_lengths
+    music_src.props.media_start    = 0
+    music_src.props.media_duration = file_lengths
+    music_src.props.priority       = 1
+    acomp = gst.element_factory_make("gnlcomposition")
+    acomp.add(music_src)
+    return acomp
+
+
 def main(args):
     # get arguments
     parser = OptionParser()
@@ -39,18 +54,7 @@ def main(args):
     vcomp, controllers = composition(int(options.transition_type), transition_length, files)
 
     if options.music:
-        assert os.path.isfile(options.music)
-        file_lengths = sum(duration(x) for x in files) - transition_length * (len(files) - 1)
-        music_src = gst.element_factory_make("gnlfilesource")
-        music_src.props.location = "file://"+os.path.abspath(options.music)
-        music_src.props.start          = 0
-        music_src.props.duration       = file_lengths
-        music_src.props.media_start    = 0
-        music_src.props.media_duration = file_lengths
-        music_src.props.priority       = 1
-        acomp = gst.element_factory_make("gnlcomposition")
-        acomp.add(music_src)
-
+        acomp = music_stream(options.music, files, transition_length)
 
     vqueue = gst.element_factory_make("queue")
     color= gst.element_factory_make("ffmpegcolorspace")

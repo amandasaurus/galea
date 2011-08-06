@@ -56,14 +56,16 @@ def main(args):
     color= gst.element_factory_make("ffmpegcolorspace")
     venc = gst.element_factory_make("theoraenc")
     mux = gst.element_factory_make("oggmux")
+    progress = gst.element_factory_make("progressreport")
     sink = gst.element_factory_make("filesink")
     sink.props.location = options.output_filename
     pipeline = gst.Pipeline()
-    pipeline.add(vcomp, vqueue, color, venc, mux, sink)
+    pipeline.add(vcomp, vqueue, color, venc, mux, progress, sink)
     vqueue.link(color)
     color.link(venc)
     venc.link(mux)
-    mux.link(sink)
+    mux.link(progress)
+    progress.link(sink)
 
     if options.music:
         audioconvert = gst.element_factory_make("audioconvert")

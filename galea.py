@@ -81,10 +81,10 @@ def main(args):
     pipeline = gst.Pipeline()
     pipeline.add(vcomp, vqueue, color, venc, mux, progress, sink)
     vqueue.link(color)
-    color.link(venc)
+    color.link(progress)
+    progress.link(venc)
     venc.link(mux)
-    mux.link(progress)
-    progress.link(sink)
+    mux.link(sink)
 
     if options.music:
         audioconvert = gst.element_factory_make("audioconvert")

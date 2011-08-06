@@ -38,7 +38,7 @@ def music_stream(music_filename, all_video_files, transition_length):
     music_src.props.start          = 0
     music_src.props.duration       = file_lengths
     music_src.props.media_start    = offset
-    music_src.props.media_duration = file_lengths + offset
+    music_src.props.media_duration = file_lengths
     music_src.props.priority       = 1
     acomp = gst.element_factory_make("gnlcomposition")
     acomp.add(music_src)

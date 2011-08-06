@@ -109,7 +109,6 @@ def composition(transition_type, transition_length, files):
     assert len(files) > 0
     files = [('file://'+os.path.abspath(x), duration(x)) for x in files]
 
-    TRANSITION_LENGTH = long(0.1 * gst.SECOND)
     assert all(x[1] > transition_length for x in files)
 
     composition  = gst.element_factory_make("gnlcomposition")

@@ -109,7 +109,11 @@ def composition(transition_type, transition_length, files):
     assert len(files) > 0
     files = [('file://'+os.path.abspath(x), duration(x)) for x in files]
 
-    assert all(x[1] > transition_length for x in files)
+    # If there is a video that's shorter than twice transition_length, there
+    # won't be enough time for the transition to go in adn then out. I don't
+    # know if you can have overlapping transitions, so prevent this from
+    # happening in the first place
+    assert all(x[1] > transition_length*2 for x in files)
 
     composition  = gst.element_factory_make("gnlcomposition")
     current_start = 0

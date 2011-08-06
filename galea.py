@@ -48,7 +48,7 @@ def music_stream(music_filename, all_video_files, transition_length):
 def main(args):
     # get arguments
     parser = OptionParser()
-    parser.add_option("-o", '--output', dest="output_filename", default="transitions.ogv")
+    parser.add_option("-o", '--output', dest="output_filename", default="video")
     parser.add_option("-l", '--transition-length', dest="transition_length", default=0.5)
     parser.add_option("-t", '--transition-type', dest="transition_type", default=-21)
     parser.add_option("-m", '--music', dest="music", default=None)
@@ -79,7 +79,7 @@ def main(args):
     mux = gst.element_factory_make(format['muxer'])
     progress = gst.element_factory_make("progressreport")
     sink = gst.element_factory_make("filesink")
-    sink.props.location = options.output_filename
+    sink.props.location = options.output_filename + "." + options.format
     pipeline = gst.Pipeline()
     pipeline.add(vcomp, vqueue, color, venc, mux, progress, sink)
     vqueue.link(color)

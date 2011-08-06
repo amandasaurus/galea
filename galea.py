@@ -53,6 +53,7 @@ def main(args):
     parser.add_option("-t", '--transition-type', dest="transition_type", default=-21)
     parser.add_option("-m", '--music', dest="music", default=None)
     parser.add_option("-f", "--format", dest="format", default="ogv", help="Type of video format output")
+    parser.add_option("-v", "--music-volume", dest="music_volume", default=1.0)
 
     formats = {
         'ogv':  { 'venc': 'theoraenc', 'aenc': 'vorbisenc', 'muxer': 'oggmux'},
@@ -90,14 +91,17 @@ def main(args):
 
     if options.music:
         audioconvert = gst.element_factory_make("audioconvert")
+        volume = gst.element_factory_make("volume")
+        volume.props.volume = float(options.music_volume)
         aenc = gst.element_factory_make(format['aenc'])
         queue = gst.element_factory_make("queue")
         muxqueue = gst.element_factory_make("queue")
-        pipeline.add(audioconvert, aenc, queue)
+        pipeline.add(audioconvert, aenc, queue, volume)
         pipeline.add(muxqueue)
         pipeline.add(acomp)
         queue.link(audioconvert)
-        audioconvert.link(aenc)
+        audioconvert.link(volume)
+        volume.link(aenc)
         aenc.link(muxqueue)
         muxqueue.link(mux)
 

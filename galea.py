@@ -23,13 +23,9 @@ def duration(filepath):
     d.set_state(gst.STATE_NULL)
     return duration
 
-def music_stream(music_filename, all_video_files, transition_length):
-    offset = 0
-    if ',' in music_filename and not os.path.isfile(music_filename):
-        music_filename, offset = music_filename.split(",", 1)
-        offset = float(offset)
-        assert offset >= 0
-        offset = long(offset * gst.SECOND)
+def music_stream(music_filename, music_start, all_video_files, transition_length):
+    music_start = float(music_start)
+    music_start = long(music_start * gst.SECOND)
         
     assert os.path.isfile(music_filename)
     file_lengths = sum(duration(x) for x in all_video_files) - transition_length * (len(all_video_files) - 1)
@@ -37,7 +33,7 @@ def music_stream(music_filename, all_video_files, transition_length):
     music_src.props.location = "file://"+os.path.abspath(music_filename)
     music_src.props.start          = 0
     music_src.props.duration       = file_lengths
-    music_src.props.media_start    = offset
+    music_src.props.media_start    = music_start
     music_src.props.media_duration = file_lengths
     music_src.props.priority       = 1
     acomp = gst.element_factory_make("gnlcomposition")
@@ -52,6 +48,7 @@ def main(args):
     parser.add_option("-l", '--transition-length', dest="transition_length", default=0.5)
     parser.add_option("-t", '--transition-type', dest="transition_type", default=-21)
     parser.add_option("-m", '--music', dest="music", default=None)
+    parser.add_option("-s", "--music-start", dest="music_start", default=0)
     parser.add_option("-f", "--format", dest="format", default="ogv", help="Type of video format output")
     parser.add_option("-v", "--music-volume", dest="music_volume", default=1.0)
 
@@ -72,7 +69,7 @@ def main(args):
     vcomp, controllers = composition(int(options.transition_type), transition_length, video_files)
 
     if options.music:
-        acomp = music_stream(options.music, video_files, transition_length)
+        acomp = music_stream(options.music, options.music_start, video_files, transition_length)
 
     vqueue = gst.element_factory_make("queue")
     color= gst.element_factory_make("ffmpegcolorspace")

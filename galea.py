@@ -131,20 +131,20 @@ def composition(transition_type, transition_length, files):
     controllers = []
 
     assert len(files) > 0, files
-    current_start = files[0][1] - transition_length
+    transition_start = files[0][1] - transition_length
     for fileuri, length in files[1:]:
         trans, controller = transition(transition_type, transition_length)
         controllers.append(controller)
 
         op = gst.element_factory_make("gnloperation")
         op.add(trans)
-        op.props.start          = current_start
+        op.props.start          = transition_start
         op.props.duration       = transition_length
         op.props.media_start    = 0
         op.props.media_duration = transition_length
         op.props.priority       = 1
         composition.add(op)
-        current_start = current_start + length - transition_length
+        transition_start = transition_start + length - transition_length
 
     return composition, controllers
 

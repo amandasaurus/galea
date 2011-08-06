@@ -29,6 +29,7 @@ def main(args):
     parser.add_option("-o", dest="output_filename", default="transitions.webm")
     parser.add_option("-l", dest="transition_length", default=0.5)
     parser.add_option("-t", dest="transition_type", default=21)
+    parser.add_option("-m", dest="music", default=None)
 
     options, args = parser.parse_args()
     files = args
@@ -36,21 +37,52 @@ def main(args):
     transition_length = long(float(options.transition_length) * gst.SECOND)
 
     comp, controllers = composition(int(options.transition_type), transition_length, files)
+
+    if options.music:
+        assert os.path.isfile(options.music)
+        file_lengths = sum(duration(x) for x in files) - transition_length * (len(files) - 1)
+        music_src = gst.element_factory_make("gnlfilesource")
+        music_src.props.location = "file://"+os.path.abspath(options.music)
+        music_src.props.start          = 0
+        music_src.props.duration       = file_lengths
+        music_src.props.media_start    = 0
+        music_src.props.media_duration = file_lengths
+        music_src.props.priority       = 1
+        acomp = gst.element_factory_make("gnlcomposition")
+        acomp.add(music_src)
+
+
+    vqueue = gst.element_factory_make("queue")
     color= gst.element_factory_make("ffmpegcolorspace")
-    enc = gst.element_factory_make("theoraenc")
-    mux = gst.element_factory_make("oggmux")
+    enc = gst.element_factory_make("x264enc")
+    mux = gst.element_factory_make("avimux")
     sink = gst.element_factory_make("filesink")
     sink.props.location = options.output_filename
     pipeline = gst.Pipeline()
-    pipeline.add(comp, color, enc, mux, sink)
+    pipeline.add(comp, vqueue, color, enc, mux, sink)
+    vqueue.link(color)
     color.link(enc)
     enc.link(mux)
     mux.link(sink)
 
+    if options.music:
+        audioconvert = gst.element_factory_make("audioconvert")
+        aenc = gst.element_factory_make("vorbisenc")
+        queue = gst.element_factory_make("queue")
+        muxqueue = gst.element_factory_make("queue")
+        pipeline.add(audioconvert, aenc, queue)
+        pipeline.add(muxqueue)
+        queue.link(audioconvert)
+        audioconvert.link(aenc)
+        aenc.link(muxqueue)
+        muxqueue.link(mux)
+
     def on_pad(comp, pad, elements):
         convpad = elements.get_compatible_pad(pad, pad.get_caps())
         pad.link(convpad)
-    comp.connect("pad-added", on_pad, color)
+    comp.connect("pad-added", on_pad, vqueue)
+    if options.music:
+        acomp.connect("pad-added", on_pad, queue)
 
     loop = gobject.MainLoop(is_running=True)
     bus = pipeline.get_bus()

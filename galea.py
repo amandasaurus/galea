@@ -47,14 +47,14 @@ def main(args):
     parser.add_option("-m", '--music', dest="music", default=None)
 
     options, args = parser.parse_args()
-    files = args
+    video_files = args
 
     transition_length = long(float(options.transition_length) * gst.SECOND)
 
-    vcomp, controllers = composition(int(options.transition_type), transition_length, files)
+    vcomp, controllers = composition(int(options.transition_type), transition_length, video_files)
 
     if options.music:
-        acomp = music_stream(options.music, files, transition_length)
+        acomp = music_stream(options.music, video_files, transition_length)
 
     vqueue = gst.element_factory_make("queue")
     color= gst.element_factory_make("ffmpegcolorspace")

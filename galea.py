@@ -45,6 +45,7 @@ def main(args):
     parser.add_option("-l", '--transition-length', dest="transition_length", default=0.5)
     parser.add_option("-t", '--transition-type', dest="transition_type", default=-21)
     parser.add_option("-m", '--music', dest="music", default=None)
+    parser.add_option("-f", "--format", dest="format", default="ogv", help="Type of video format output")
 
     options, args = parser.parse_args()
     video_files = args

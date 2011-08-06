@@ -116,6 +116,12 @@ def composition(transition_type, transition_length, files):
     assert all(x[1] > transition_length*2 for x in files)
 
     composition  = gst.element_factory_make("gnlcomposition")
+
+    ## Add a gnlfilesource for each of the videos
+
+    # The position in the main timeline (in nanoseconds) that the next video
+    # should start playing at. Initally at 0 cause the first video plays at the
+    # start
     current_start = 0
     for idx, (fileuri, length) in enumerate(files):
         gsrc = gst.element_factory_make("gnlfilesource")
@@ -124,16 +130,31 @@ def composition(transition_type, transition_length, files):
         gsrc.props.duration       = length
         gsrc.props.media_start    = 0
         gsrc.props.media_duration = length
+
+        # The earlier the video, the higher the priority number (which means a
+        # less priority video). i.e. video #1 should have a higher priority
+        # number than video #2, to ensure that video #2 will play instead of
+        # video #1
+        # The priority of gnlfilesources is a bit of yak shaving mystery and is
+        # something that you have to poke with and do black magic to make it
+        # work
         gsrc.props.priority       = len(files) - idx + 1
         composition.add(gsrc)
         current_start = current_start + length - transition_length
 
     controllers = []
 
+    ## Make a transition for each video (bar the first)
     assert len(files) > 0, files
+
+    # The time (in nanoseconds) that the transitions should start at.
+    # The first transition should start transition_length nanoseconds before the first video ends
     transition_start = files[0][1] - transition_length
     for fileuri, length in files[1:]:
         trans, controller = transition(transition_type, transition_length)
+
+        # we need to keep references to the controllers around, lest gstreamer break
+        # cf. http://notes.brooks.nu/2011/01/python-gstreamer-controller/
         controllers.append(controller)
 
         op = gst.element_factory_make("gnloperation")
@@ -146,6 +167,8 @@ def composition(transition_type, transition_length, files):
         composition.add(op)
         transition_start = transition_start + length - transition_length
 
+
+    # return a reference to the controllers aswell
     return composition, controllers
 
 

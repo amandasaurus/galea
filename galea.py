@@ -57,6 +57,7 @@ def main(args):
     formats = {
         'ogv':  { 'venc': 'theoraenc', 'aenc': 'vorbisenc', 'muxer': 'oggmux'},
         'webm': { 'venc': 'vp8enc', 'aenc': 'vorbisenc', 'muxer': 'webmmux' },
+        'mp4':  { 'venc': 'x264enc', 'aenc': 'lame', 'muxer': 'mp4mux' },
     }
 
     options, args = parser.parse_args()

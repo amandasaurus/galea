@@ -106,6 +106,7 @@ def main(args):
         venc.link(mux)
         mux.link(sink)
 
+
         if options.music:
             audioconvert = gst.element_factory_make("audioconvert")
             volume = gst.element_factory_make("volume")

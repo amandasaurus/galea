@@ -23,6 +23,20 @@ def duration(filepath):
     d.set_state(gst.STATE_NULL)
     return duration
 
+def width_height(filepath):
+    assert os.path.isfile(filepath)
+    gobject.threads_init()
+    pipeline = gst.parse_launch("filesrc name=source ! decodebin2 name=decoder ! fakesink")
+    source = pipeline.get_by_name("source")
+    source.set_property("location", filepath)
+    pipeline.set_state(gst.STATE_PLAYING)
+    pipeline.get_state()
+    pad = list(pipeline.get_by_name("decoder").src_pads())[0]
+    caps = pad.get_caps()[0]
+    width, height =  caps['width'], caps['height']
+    pipeline.set_state(gst.STATE_NULL)
+    return width, height
+
 def music_stream(music_filename, music_start, all_video_files, transition_length):
     music_start = float(music_start)
     music_start = long(music_start * gst.SECOND)

@@ -80,8 +80,9 @@ def main(args):
     assert all(width_height(file) == (vwidth, vheight) for file in video_files), "Not all files the same width/height"
 
     formats = options.format.split(",")
+    assert all(format in known_formats for format in formats), "Unknown format %r, known formats: %r" % (options.format, known_formats.keys())
     formats = [known_formats[x] for x in formats]
-    #assert options.format in formats, "Unknown format %r, known formats: %r" % (options.format, formats.keys())
+
     for format in formats:
         print format
         transition_length = long(float(options.transition_length) * gst.SECOND)

@@ -72,10 +72,12 @@ def main(args):
         'mp4':  { 'venc': 'x264enc', 'aenc': 'lame', 'muxer': 'mp4mux', 'filename':"%s.mp4" },
     }
 
+
     options, args = parser.parse_args()
     video_files = args
 
     vwidth, vheight = width_height(video_files[0])
+    assert all(width_height(file) == (vwidth, vheight) for file in video_files), "Not all files the same width/height"
 
     formats = options.format.split(",")
     formats = [known_formats[x] for x in formats]

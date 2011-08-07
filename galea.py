@@ -75,6 +75,8 @@ def main(args):
     options, args = parser.parse_args()
     video_files = args
 
+    vwidth, vheight = width_height(video_files[0])
+
     formats = options.format.split(",")
     formats = [known_formats[x] for x in formats]
     #assert options.format in formats, "Unknown format %r, known formats: %r" % (options.format, formats.keys())

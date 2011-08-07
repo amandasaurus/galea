@@ -52,7 +52,7 @@ def main(args):
     parser.add_option("-f", "--format", dest="format", default="ogv", help="Type of video format output")
     parser.add_option("-v", "--music-volume", dest="music_volume", default=1.0)
 
-    formats = {
+    known_formats = {
         'ogv':  { 'venc': 'theoraenc', 'aenc': 'vorbisenc', 'muxer': 'oggmux', 'filename':"%s.ogv"},
         'webm': { 'venc': 'vp8enc', 'aenc': 'vorbisenc', 'muxer': 'webmmux', 'filename':"%s.webm" },
         'mp4':  { 'venc': 'x264enc', 'aenc': 'lame', 'muxer': 'mp4mux', 'filename':"%s.mp4" },
@@ -61,67 +61,69 @@ def main(args):
     options, args = parser.parse_args()
     video_files = args
 
-    assert options.format in formats, "Unknown format %r, known formats: %r" % (options.format, formats.keys())
-    format = formats[options.format]
+    formats = options.format.split(",")
+    formats = [known_formats[x] for x in formats]
+    #assert options.format in formats, "Unknown format %r, known formats: %r" % (options.format, formats.keys())
+    for format in formats:
+        print format
+        transition_length = long(float(options.transition_length) * gst.SECOND)
 
-    transition_length = long(float(options.transition_length) * gst.SECOND)
+        vcomp, controllers = composition(int(options.transition_type), transition_length, video_files)
 
-    vcomp, controllers = composition(int(options.transition_type), transition_length, video_files)
+        if options.music:
+            acomp = music_stream(options.music, options.music_start, video_files, transition_length)
 
-    if options.music:
-        acomp = music_stream(options.music, options.music_start, video_files, transition_length)
+        vqueue = gst.element_factory_make("queue")
+        color= gst.element_factory_make("ffmpegcolorspace")
+        venc = gst.element_factory_make(format['venc'])
+        mux = gst.element_factory_make(format['muxer'])
+        progress = gst.element_factory_make("progressreport")
+        sink = gst.element_factory_make("filesink")
+        sink.props.location = format['filename'] % options.output_filename
+        pipeline = gst.Pipeline()
+        pipeline.add(vcomp, vqueue, color, venc, mux, progress, sink)
+        vqueue.link(color)
+        color.link(progress)
+        progress.link(venc)
+        venc.link(mux)
+        mux.link(sink)
 
-    vqueue = gst.element_factory_make("queue")
-    color= gst.element_factory_make("ffmpegcolorspace")
-    venc = gst.element_factory_make(format['venc'])
-    mux = gst.element_factory_make(format['muxer'])
-    progress = gst.element_factory_make("progressreport")
-    sink = gst.element_factory_make("filesink")
-    sink.props.location = format['filename'] % options.output_filename
-    pipeline = gst.Pipeline()
-    pipeline.add(vcomp, vqueue, color, venc, mux, progress, sink)
-    vqueue.link(color)
-    color.link(progress)
-    progress.link(venc)
-    venc.link(mux)
-    mux.link(sink)
+        if options.music:
+            audioconvert = gst.element_factory_make("audioconvert")
+            volume = gst.element_factory_make("volume")
+            volume.props.volume = float(options.music_volume)
+            aenc = gst.element_factory_make(format['aenc'])
+            queue = gst.element_factory_make("queue")
+            muxqueue = gst.element_factory_make("queue")
+            pipeline.add(audioconvert, aenc, queue, volume)
+            pipeline.add(muxqueue)
+            pipeline.add(acomp)
+            queue.link(audioconvert)
+            audioconvert.link(volume)
+            volume.link(aenc)
+            aenc.link(muxqueue)
+            muxqueue.link(mux)
 
-    if options.music:
-        audioconvert = gst.element_factory_make("audioconvert")
-        volume = gst.element_factory_make("volume")
-        volume.props.volume = float(options.music_volume)
-        aenc = gst.element_factory_make(format['aenc'])
-        queue = gst.element_factory_make("queue")
-        muxqueue = gst.element_factory_make("queue")
-        pipeline.add(audioconvert, aenc, queue, volume)
-        pipeline.add(muxqueue)
-        pipeline.add(acomp)
-        queue.link(audioconvert)
-        audioconvert.link(volume)
-        volume.link(aenc)
-        aenc.link(muxqueue)
-        muxqueue.link(mux)
+        def on_pad(comp, pad, elements):
+            convpad = elements.get_compatible_pad(pad, pad.get_caps())
+            pad.link(convpad)
+        vcomp.connect("pad-added", on_pad, vqueue)
+        if options.music:
+            acomp.connect("pad-added", on_pad, queue)
 
-    def on_pad(comp, pad, elements):
-        convpad = elements.get_compatible_pad(pad, pad.get_caps())
-        pad.link(convpad)
-    vcomp.connect("pad-added", on_pad, vqueue)
-    if options.music:
-        acomp.connect("pad-added", on_pad, queue)
-
-    loop = gobject.MainLoop(is_running=True)
-    bus = pipeline.get_bus()
-    bus.add_signal_watch()
-    def on_message(bus, message, loop):
-        if message.type == gst.MESSAGE_EOS:
-            loop.quit()
-        elif message.type == gst.MESSAGE_ERROR:
-            print message
-            loop.quit()
-    bus.connect("message", on_message, loop)
-    pipeline.set_state(gst.STATE_PLAYING)
-    loop.run()
-    pipeline.set_state(gst.STATE_NULL)
+        loop = gobject.MainLoop(is_running=True)
+        bus = pipeline.get_bus()
+        bus.add_signal_watch()
+        def on_message(bus, message, loop):
+            if message.type == gst.MESSAGE_EOS:
+                loop.quit()
+            elif message.type == gst.MESSAGE_ERROR:
+                print message
+                loop.quit()
+        bus.connect("message", on_message, loop)
+        pipeline.set_state(gst.STATE_PLAYING)
+        loop.run()
+        pipeline.set_state(gst.STATE_NULL)
 
 def composition(transition_type, transition_length, files):
     assert len(files) > 0

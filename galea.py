@@ -84,7 +84,7 @@ def main(args):
     formats = [known_formats[x] for x in formats]
 
     for format in formats:
-        print format
+        print "Saving to %s" % (format['filename'] % options.output_filename)
         transition_length = long(float(options.transition_length) * gst.SECOND)
 
         vcomp, controllers = composition(int(options.transition_type), transition_length, video_files)

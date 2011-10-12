@@ -76,6 +76,10 @@ def main(args):
     options, args = parser.parse_args()
     video_files = args
 
+    if len(video_files) == 0:
+        sys.stderr.write("Usage: galea.py [options] videofile1 videofile2 ...")
+        sys.exit(1)
+
     vwidth, vheight = width_height(video_files[0])
     assert all(width_height(file) == (vwidth, vheight) for file in video_files), "Not all files the same width/height"
 

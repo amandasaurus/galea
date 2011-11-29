@@ -58,13 +58,13 @@ def music_stream(music_filename, music_start, all_video_files, transition_length
 def main(args):
     # get arguments
     parser = OptionParser()
-    parser.add_option("-o", '--output', dest="output_filename", default="video")
-    parser.add_option("-l", '--transition-length', dest="transition_length", default=0.5)
+    parser.add_option("-o", '--output', dest="output_filename", help="prefix for filename to save output to", default="video")
+    parser.add_option("-l", '--transition-length', dest="transition_length", help="Length in seconds of transition (default: 0.5)", default=0.5)
     parser.add_option("-t", '--transition-type', dest="transition_type", default=-21)
-    parser.add_option("-m", '--music', dest="music", default=None)
-    parser.add_option("-s", "--music-start", dest="music_start", default=0)
+    parser.add_option("-m", '--music', dest="music", help="File to use as music backingtrack. default: no music", default=None)
+    parser.add_option("-s", "--music-start", dest="music_start", help="Start the music file playing at this point, not the start of the music", default=0)
     parser.add_option("-f", "--format", dest="format", default="ogv", help="Type of video format output")
-    parser.add_option("-v", "--music-volume", dest="music_volume", default=1.0)
+    parser.add_option("-v", "--music-volume", dest="music_volume", help="Multiply the music volume by this. 1.0=leave same (default), 0.5=half as loud", default=1.0)
 
     known_formats = {
         'ogv':  { 'venc': 'theoraenc', 'aenc': 'vorbisenc', 'muxer': 'oggmux', 'filename':"%s.ogv"},
